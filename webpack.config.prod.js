@@ -17,6 +17,7 @@ module.exports = {
         })],
     },
     externals: {
+		// TAC:"TAC"
     },
     output: {
         filename: "tac/js/tac.min.js",

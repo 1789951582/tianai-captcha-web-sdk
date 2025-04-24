@@ -200,7 +200,7 @@ function closeTips(el, callback) {
     }
 }
 
-function showTips(el, msg, type, callback) {
+function showTips(el, msg, type) {
     const tipEl = Dom(el).find("#tianai-captcha-tips");
     tipEl.text(msg);
     if (type === 1) {
@@ -214,12 +214,12 @@ function showTips(el, msg, type, callback) {
     }
     tipEl.addClass("tianai-captcha-tips-on");
     // 延时
-    setTimeout(callback, 1000);
+    // setTimeout(callback, 1000);
 }
 
 class CommonCaptcha {
-    showTips(msg, type, callback) {
-        showTips(this.el, msg, type, callback)
+    showTips(msg, type) {
+        showTips(this.el, msg, type)
     }
 
     closeTips(msg, callback) {

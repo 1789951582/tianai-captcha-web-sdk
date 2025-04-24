@@ -81,25 +81,87 @@
 </div>
 
 <script>
-    document.querySelectorAll(".login-btn").forEach(el => {
+	// requestCaptchaDataUrl: "http://localhost:8080/gen?type=" + el.dataset.type,
+    
+	function getCaptcha(){
+		return fetch('http://localhost:3223/api/passport/get_register_code',{
+			method:'POST',
+			headers:{
+				'Content-Type': 'application/json;charset=UTF-8',
+			}
+		}).then(res=>{
+			 if (!res.ok) {
+			    // 如果响应状态码不是 2xx，抛出错误
+			    return Promise.reject(new Error('Request failed with status: ' + res.status));
+			}
+			return res.json();
+		})
+	}
+	
+	function sendAnswer(id,data,c,tac){
+		console.log("验证函数被调用")
+		const req= fetch("http://127.0.0.1:3223/api/passport/getEmailCode",{
+			method:'POST',
+			headers:{
+				'Content-Type': 'application/json;charset=UTF-8',
+			},
+			body: JSON.stringify({
+				emailAddr: 'l1789951582@gmail.com',
+				codeId: id,
+				datas:data
+			})
+		}).then(res=>{
+			if (!res.ok) {
+			    // 如果响应状态码不是 2xx，抛出错误
+			    return Promise.reject(new Error('Request failed with status: ' + res.status));
+			}
+			return res.json();
+		})
+		req.then(res=>{
+			if(res.status==200){
+				if(res.data){
+					const useTimes = (data.stopTime - data.startTime) / 1000;
+					c.showTips(`验证成功,耗时${useTimes}秒`,1)
+					setTimeout(()=>{
+						tac.destroyWindow()
+					},3000)
+					
+				}else {
+					c.showTips("验证失败，请重新尝试!", 0);
+				}
+			}else{
+				c.showTips("验证码被黑洞吸走了！", 0);
+			}
+		})
+	}
+	function btnRefreshFun(tac){
+		getCaptcha().then(data=>{
+			if(data.status==200){
+				tac.init();
+				tac.pushData(data.data)
+			}
+		})
+	}
+	
+	const config = {
+		bindEl: "#captcha-box",
+		validCaptcha:this.sendAnswer,
+		btnRefreshFun:this.btnRefreshFun,
+		btnCloseFun:undefined
+	}
+	
+	document.querySelectorAll(".login-btn").forEach(el => {
         el.addEventListener("click", e => {
-            // 样式配置
-            const config = {
-                requestCaptchaDataUrl: "http://localhost:8080/gen?type=" + el.dataset.type,
-                validCaptchaUrl: "http://localhost:8080/check",
-                bindEl: "#captcha-box"
-            }
-            // const style = {
-            //     logoUrl : null
-            //
-            // }
-
-            const captcha = new TAC(config, null);
-            captcha.init();
+			console.log(111)
+			const captcha = new TAC(config, null);
+			this.getCaptcha().then(data=>{
+				if(data.status==200){
+					captcha.init();
+					captcha.pushData(data.data)
+				}
+			})
         })
     })
-
-
 </script>
 </body>
 

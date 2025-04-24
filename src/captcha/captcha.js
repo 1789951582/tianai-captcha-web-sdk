@@ -37,15 +37,16 @@ function createCaptchaByType(type, styleConfig) {
 class TianAiCaptcha {
     constructor(config, style) {
         this.config = wrapConfig(config);
-        if (this.config.btnRefreshFun) {
-            this.btnRefreshFun = this.config.btnRefreshFun;
-        }
-        if (this.config.btnCloseFun) {
-            this.btnCloseFun = this.config.btnCloseFun;
-        }
+        // if (this.config.btnRefreshFun) {
+        //     this.btnRefreshFun = this.config.btnRefreshFun;
+        // }
+        // if (this.config.btnCloseFun) {
+        //     this.btnCloseFun = this.config.btnCloseFun;
+        // }
         this.style = wrapStyle(style);
     }
 
+	//初始化显示验证码窗口
     init() {
         this.destroyWindow();
         this.config.domBindEl.append(template);
@@ -59,108 +60,113 @@ class TianAiCaptcha {
         this.config.domBindEl.find("#tianai-captcha-slider-close-btn").click((el) => {
             this.btnCloseFun(el, this);
         });
-        // 加载验证码
-        this.reloadCaptcha();
-        return this;
     }
-
-    btnRefreshFun(el, tac) {
-        tac.reloadCaptcha();
-    }
-    btnCloseFun(el, tac) {
-        tac.destroyWindow();
-    }
-    reloadCaptcha() {
-        this.showLoading();
-        this.destroyCaptcha(() => {
-            this.createCaptcha();
-        })
-    }
-    showLoading() {
+	
+	//播放加载动画
+	showLoading() {
         this.config.domBindEl.find("#tianai-captcha-loading").css("display", "block");
     }
-
-    closeLoading() {
-        this.config.domBindEl.find("#tianai-captcha-loading").css("display", "none");
-    }
-
-    loadStyle() {
-        // 设置样式
-        const bgUrl = this.style.bgUrl;
-        const logoUrl = this.style.logoUrl;
-        if (bgUrl) {
-            // 背景图片
-            this.config.domBindEl.find("#tianai-captcha-bg-img").css("background-image", "url(" + bgUrl + ")");
-        }
-        if (logoUrl && logoUrl !== "") {
-            // logo
-            this.config.domBindEl.find("#tianai-captcha-logo").attr("src", logoUrl);
-        } else if (logoUrl === null){
-            // 删除logo
-            this.config.domBindEl.find("#tianai-captcha-logo").css("display", "none");
-        }
-    }
-
-    destroyWindow() {
-        window.currentCaptcha = undefined;
-        if (this.domTemplate) {
-            this.domTemplate.remove();
-        }
-    }
-
-    openCaptcha() {
-        setTimeout(() => {
-            window.currentCaptcha.el.css("transform", "translateX(0)")
-        }, 10)
-    }
-
-    createCaptcha() {
-        this.config.requestCaptchaData().then(data => {
-            this.closeLoading();
-            const captcha = createCaptchaByType(data.captcha.type, this.style);
-            if (captcha == null) {
-                throw new Error("[TAC] 未知的验证码类型[" + data.captcha.type + "]");
-            }
-            captcha.init(data, (d, c) => {
-                // 验证
-                const currentCaptchaData = c.currentCaptchaData;
-                const data = {
-                    bgImageWidth: currentCaptchaData.bgImageWidth,
-                    bgImageHeight: currentCaptchaData.bgImageHeight,
-                    templateImageWidth: currentCaptchaData.sliderImageWidth,
-                    templateImageHeight: currentCaptchaData.sliderImageHeight,
-                    startTime: currentCaptchaData.startTime,
-                    stopTime: currentCaptchaData.stopTime,
-                    trackList: currentCaptchaData.trackArr
-                };
-                if (c.type === 'ROTATE_DEGREE' || c.type === 'ROTATE') {
-                    data.bgImageWidth = c.currentCaptchaData.end;
-                }
-                // 清空
-                const id = c.currentCaptchaData.currentCaptchaId;
-                c.currentCaptchaData = undefined;
-                // 调用验证接口
-                this.config.validCaptcha(id, data, c, this)
-            })
-            this.openCaptcha()
-        });
-    }
-
-    destroyCaptcha(callback) {
-        if (window.currentCaptcha) {
-            window.currentCaptcha.el.css("transform", "translateX(300px)")
-            setTimeout(() => {
-                window.currentCaptcha.destroy();
-                if (callback) {
-                    callback();
-                }
-            }, 500)
-        } else {
-            callback();
-        }
-    }
-
-
+	// 关闭加载动画
+	closeLoading() {
+	    this.config.domBindEl.find("#tianai-captcha-loading").css("display", "none");
+	}
+	
+	//放入数据
+	pushData(data){
+		const captcha = createCaptchaByType(data.captcha.type,this.style);
+		if(captcha==null){
+			throw new Error("[TAC] 未知的验证码类型[" + data.captcha.type + "]");
+		}
+		this.closeLoading()
+		captcha.init(data, (d, c) => {
+			// 验证
+			const currentCaptchaData = c.currentCaptchaData;
+			const data = {
+				bgImageWidth: currentCaptchaData.bgImageWidth,
+				bgImageHeight: currentCaptchaData.bgImageHeight,
+				templateImageWidth: currentCaptchaData.sliderImageWidth,
+				templateImageHeight: currentCaptchaData.sliderImageHeight,
+				startTime: currentCaptchaData.startTime,
+				stopTime: currentCaptchaData.stopTime,
+				trackList: currentCaptchaData.trackArr
+			};
+			if (c.type === 'ROTATE_DEGREE' || c.type === 'ROTATE') {
+				data.bgImageWidth = c.currentCaptchaData.end;
+			}
+			// 清空
+			const id = c.currentCaptchaData.currentCaptchaId;
+			c.currentCaptchaData = undefined;
+			// 设置验证回调
+			const request=this.config.validCaptcha(id,data,c,this)
+		})
+		// this.openCaptcha()
+		setTimeout(() => {
+			window.currentCaptcha.el.css("transform", "translateX(0)")
+		}, 10)
+	}
+	// openCaptcha() {
+	//     setTimeout(() => {
+	//         window.currentCaptcha.el.css("transform", "translateX(0)")
+	//     }, 10)
+	// }
+	
+	//销毁验证码
+	destroyCaptcha(callback) {
+	    if (window.currentCaptcha) {
+	        window.currentCaptcha.el.css("transform", "translateX(300px)")
+	        setTimeout(() => {
+	            window.currentCaptcha.destroy();
+	            if (callback && typeof callback === 'function') {
+	                callback();
+	            }
+	        }, 500)
+	    } else {
+	        if (callback && typeof callback === 'function') {
+	            callback();
+	        }
+	    }
+	}
+	
+	//关闭验证码窗口
+	destroyWindow() {
+		window.currentCaptcha = undefined;
+		if (this.domTemplate) {
+			this.domTemplate.remove();
+		}
+	}
+	
+	//刷新按钮点击事件
+	btnRefreshFun() {
+		this.showLoading();
+		this.config.btnRefreshFun(this)
+	}
+	
+	//关闭按钮点击事件
+	btnCloseFun(el, tac) {
+		if(this.config.btnCloseFun){
+			this.config.btnCloseFun()
+		}
+	    this.destroyWindow()
+	}
+	
+	//加载样式
+	loadStyle() {
+	    // 设置样式
+	    const bgUrl = this.style.bgUrl;
+	    const logoUrl = this.style.logoUrl;
+	    if (bgUrl) {
+	        // 背景图片
+	        this.config.domBindEl.find("#tianai-captcha-bg-img").css("background-image", "url(" + bgUrl + ")");
+	    }
+	    if (logoUrl && logoUrl !== "") {
+	        // logo
+	        this.config.domBindEl.find("#tianai-captcha-logo").attr("src", logoUrl);
+	    } else if (logoUrl == null || logoUrl== undefined){
+	        // 删除logo
+	        this.config.domBindEl.find("#tianai-captcha-logo").css("display", "none");
+	    }
+	}
+	
 }
 
 export {TianAiCaptcha, CaptchaConfig}
