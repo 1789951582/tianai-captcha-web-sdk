@@ -118,11 +118,16 @@
 					
 				}else {
 					c.showTips("验证失败，请重新尝试!", 0);
-					tac.btnRefreshFun()//触发刷新
+					setTimeout(()=>{
+						tac.btnRefreshFun()//触发刷新
+					},2000)
+					
 				}
 			}else{
 				c.showTips("验证码被黑洞吸走了！", 0);
-				tac.btnRefreshFun()//触发刷新
+				setTimeout(()=>{
+					tac.btnRefreshFun()//触发刷新
+				},2000)
 			}
 		})
 	}
