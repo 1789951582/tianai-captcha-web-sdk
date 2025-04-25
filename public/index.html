@@ -69,22 +69,12 @@
         <span class="input-left">密码</span>
         xxxxx
     </div>
-    <div class="login-btn" data-type="HONEYCOMB_IMAGE_CLICK">登录(图标点选)</div>
-<!--    <div class="login-btn" data-type="SCRAPE">登录(刮刮卡)</div>-->
-<!--    <div class="login-btn" data-type="WORD_ORDER_IMAGE_CLICK">登录(语序点选)</div>-->
-<!--    <div class="login-btn" data-type="IMAGE_CLICK">登录(图标点选2)</div>-->
-<!--    <div class="login-btn" data-type="ROTATE_DEGREE">登录(旋转角度)</div>-->
-<!--    <div class="login-btn" data-type="ROTATE">登录(旋转)</div>-->
-<!--    <div class="login-btn" data-type="CONCAT">登录(拼接)</div>-->
-<!--    <div class="login-btn" data-type="WORD_IMAGE_CLICK">登录(汉字点选)</div>-->
-<!--    <div class="login-btn" data-type="SLIDER">登录(滑块拼图)</div>-->
+    <div class="login-btn">登录(图标点选)</div>
 </div>
 
 <script>
-	// requestCaptchaDataUrl: "http://localhost:8080/gen?type=" + el.dataset.type,
-    
 	function getCaptcha(){
-		return fetch('http://localhost:3223/api/passport/get_register_code',{
+		return fetch('/api/passport/get_captcha',{
 			method:'POST',
 			headers:{
 				'Content-Type': 'application/json;charset=UTF-8',
@@ -100,13 +90,13 @@
 	
 	function sendAnswer(id,data,c,tac){
 		console.log("验证函数被调用")
-		const req= fetch("http://127.0.0.1:3223/api/passport/getEmailCode",{
+		const req= fetch("/api/passport/captcha",{
 			method:'POST',
 			headers:{
 				'Content-Type': 'application/json;charset=UTF-8',
 			},
 			body: JSON.stringify({
-				emailAddr: 'l1789951582@gmail.com',
+				token: '123456',
 				codeId: id,
 				datas:data
 			})
@@ -128,16 +118,17 @@
 					
 				}else {
 					c.showTips("验证失败，请重新尝试!", 0);
+					tac.btnRefreshFun()//触发刷新
 				}
 			}else{
 				c.showTips("验证码被黑洞吸走了！", 0);
+				tac.btnRefreshFun()//触发刷新
 			}
 		})
 	}
 	function btnRefreshFun(tac){
 		getCaptcha().then(data=>{
 			if(data.status==200){
-				tac.init();
 				tac.pushData(data.data)
 			}
 		})
@@ -152,12 +143,13 @@
 	
 	document.querySelectorAll(".login-btn").forEach(el => {
         el.addEventListener("click", e => {
-			console.log(111)
 			const captcha = new TAC(config, null);
+			console.log(captcha)
 			this.getCaptcha().then(data=>{
 				if(data.status==200){
 					captcha.init();
 					captcha.pushData(data.data)
+					// captcha.destroyCaptcha()
 				}
 			})
         })

@@ -8,7 +8,7 @@ const {CleanWebpackPlugin} = require("clean-webpack-plugin");
 
 const commonConfig = {
     mode: 'development',
-    entry: "./src/index.js",
+    // entry: "./src/index-prod.js",
     output: {
         filename: "tac.js",
         path: path.resolve(__dirname, "./dist")
@@ -62,7 +62,13 @@ const commonConfig = {
     devServer: {
         // 开发时可直接访问到 ./public 下的静态资源，这些资源在开发中不必打包
         port: 3000,
-        static: "./dist"
+        static: "./dist",
+		proxy: {
+			'/api': {
+				target: 'http://localhost:3223'
+			},
+		  
+		}
     }
 }
 

@@ -16,18 +16,12 @@ module.exports = {
             extractComments: false, // 是否将注释提取到单独的文件中
         })],
     },
-    externals: {
-		// TAC:"TAC"
-    },
+	entry: "./src/index-prod.js",
     output: {
         filename: "tac/js/tac.min.js",
-        path: path.resolve(__dirname, "./dist")
-    },
-    plugins: [
-        new HtmlWebpackPlugin({
-            filename: 'index.html',
-            template: './public/index-prod.html'
-        })
-    ]
-
+        path: path.resolve(__dirname, "./dist"),
+		library: 'TAC',           // 暴露为全局变量名
+		libraryTarget: 'umd',     // 通用模块定义
+		globalObject: 'this'       // 兼容浏览器环境
+    }
 }
